@@ -12,7 +12,7 @@ from torchvision.transforms import ToTensor
 def get_args() :
     parser = argparse.ArgumentParser("Quick Draw classifier")
     parser.add_argument("--image-size", '-i', type= int, default=28, help="Common size of all images")
-    parser.add_argument("--checkpoint_dir", type=str, default="models", help="Where to store the trained model")
+    parser.add_argument("--checkpoint_dir", type=str, default="D:\\Code\\Python\\Quick_Draw_Recognition\\models", help="Where to store the trained model")
     args, knows = parser.parse_known_args()
     return args
 
@@ -51,22 +51,34 @@ def app(args) :
             break
         cv.imshow("App Painting", 255- image)
         if key == ord(" ") :
-            image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-            ys, xs = np.nonzero(image)
+            # Chuyển sang grayscale
+            image_gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+            ys, xs = np.nonzero(image_gray)
+            if len(xs) == 0 or len(ys) == 0 :
+                continue  # tránh lỗi nếu không có gì được vẽ
             min_x = np.min(xs)
             max_x = np.max(xs)
             min_y = np.min(ys)
             max_y = np.max(ys)
-            image_gray = image[min_y : max_y , min_x :max_x]
 
-            image = cv.resize(image_gray, (28, 28))
-            image = transform(image).unsqueeze(0).to(device)
-            result = model(image)
-            print(CLASSES[torch.argmax(result[0])])
+            roi = image_gray[min_y :max_y, min_x :max_x]
+            roi = cv.resize(roi, (28, 28))
+            input_tensor = transform(roi).unsqueeze(0).to(device)
+
+            with torch.no_grad() :
+                result = model(input_tensor)
+            predicted_class = CLASSES[torch.argmax(result[0])]
+            print(predicted_class)
+
+            # Hiển thị kết quả lên màn hình trong 3 giây
+            display_image = image.copy()
+            cv.putText(display_image, predicted_class, (50, 50), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3)
+            cv.imshow("App Painting", 255 - display_image)
+            cv.waitKey(3000)
+
             image = np.zeros((480, 640, 3), dtype=np.uint8)
             ix = -1
             iy = -1
-
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm.autonotebook import tqdm
 import argparse
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, recall_score
+from sklearn.metrics import accuracy_score, confusion_matrix
 from config import CLASSES
 
 def get_args() :
